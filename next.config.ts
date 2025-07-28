@@ -16,7 +16,6 @@ const nextConfig: NextConfig = {
         },
     },
     allowedDevOrigins: ['https://jalgo.ai','localhost:3001','3.111.162.20:3001','local-origin.dev', '*.local-origin.dev'],
-
 };
 
 export default nextConfig;

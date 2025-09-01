@@ -1,99 +1,98 @@
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
-//import * as Sentry from "@sentry/nextjs";
+// app/api/register/route.ts
+import { NextRequest, NextResponse } from "next/server";
+import { withApiHandler } from "@/utils/withApiHandler";
+import { createSuccessResponse } from "@/utils/apiResponse";
+import { parseBackendResponse } from "@/utils/parseBackendResponse";
+import { getRequestLogger } from "@/utils/requestLogger";
 
-const createErrorResponse = (
-  code: string,
-  message: string,
-  status: number,
-  errorDetails?: any,
-) => {
-  if (process.env.NODE_ENV !== "production") {
-    console.error(`Error [${code}]: ${message}`, errorDetails || "");
-  }
-  return NextResponse.json(
-    {
-      error: true,
-      code,
-      message,
-    },
-    { status },
-  );
-};
+export const runtime = "nodejs";
 
-export async function POST(req: NextRequest) {
-  const Api_Base_Url = process.env.NEXT_PUBLIC_API_BASE_URL;
-
-  // Validate environment variables
-  if (!Api_Base_Url) {
-    const error = new Error("API base URL is not configured");
-    if (process.env.NODE_ENV === "production") {
-      //Sentry.captureException(error);
-    }
-    return createErrorResponse(
-      "ENV_ERROR",
-      "API base URL is not configured",
-      500,
-      error,
-    );
-  }
-
-  try {
-    const body = await req.json();
-
-    const response = await fetch(
-      `${Api_Base_Url}/ipa/v1/auth/submit-register-data`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(body),
-      },
-    );
-
-    if (!response.ok) {
-      // Handle server errors from external API
-      const errorData = await response.json();
-      console.log("3333333333333", errorData);
-
-      // Use the code provided by the external API if available
-      const errorCode = errorData?.code || "SERVER_ERROR";
-
-      return createErrorResponse(
-        errorCode, // Forward the external API error code (e.g., INVALID_CREDENTIALS)
-        errorData?.message || "Failed to Submit Register Data",
-        response.status,
-        errorData,
-      );
-    }
-
-    // Parse and return successful response
-    const data = await response.json();
-    return NextResponse.json({
-      error: false,
-      data,
-      message: "Registration Successfull",
-    });
-  } catch (error: unknown) {
-    if (process.env.NODE_ENV === "production") {
-      //Sentry.captureException(error);
-    }
-
-    if (error instanceof Error) {
-      return createErrorResponse(
-        "KNOWN_ERROR",
-        error.message || "An unexpected error occurred",
-        500,
-        error,
-      );
-    }
-
-    return createErrorResponse(
-      "UNKNOWN_ERROR",
-      "An unexpected error occurred",
-      500,
-      error,
-    );
-  }
+function maskBody(body: any) {
+    if (!body || typeof body !== "object") return body;
+    const clone: any = { ...body };
+    for (const k of ["password", "confirm_password", "otp", "token"]) if (k in clone) clone[k] = "***";
+    return clone;
 }
+
+async function registerHandler(req: NextRequest, API_BASE_URL: string) {
+    const requestId = req.headers.get("x-request-id") || "no-request-id";
+    const actionId = req.headers.get("x-action-id") || undefined;
+    const log: any = getRequestLogger(req);
+    const startedAt = Date.now();
+
+    log.info("register.start");
+
+    let body: any;
+    try {
+        body = await req.json();
+        log.debug("register.body", { body: maskBody(body) });
+    } catch (err) {
+        log.error("register.body.parse_error", { err });
+        throw err;
+    }
+
+    const url = `${API_BASE_URL}/ipa/v1/auth/submit-register-data`;
+    const controller = new AbortController();
+    const timeoutMs = 10_000;
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+    log.info("register.backend.request", { url, timeoutMs });
+
+    let response: Response;
+    try {
+        response = await fetch(url, {
+            method: "POST",
+            headers: {
+                "content-type": "application/json",
+                "x-request-id": requestId,
+                ...(actionId ? { "x-action-id": actionId } : {}),
+            },
+            body: JSON.stringify(body),
+            signal: controller.signal
+        });
+        console.log("222222222222222222", response)
+        log.info("register.backend.response", { status: response.status, ok: response.ok });
+    } catch (err: any) {
+        if (err?.name === "AbortError") {
+            log.error("register.backend.abort", { durationMs: Date.now() - startedAt });
+        } else {
+            log.error("register.backend.fetch_error", { err });
+        }
+        throw err;
+    } finally {
+        clearTimeout(timeout);
+    }
+
+    let parsed: any;
+    try {
+        parsed = await parseBackendResponse(response, "Failed to Submit Register Data", requestId, actionId);
+    } catch (err) {
+        log.error("register.backend.parse_error", { err });
+        throw err;
+    }
+
+    if (parsed instanceof Response) {
+        (parsed as NextResponse).headers.set("x-request-id", requestId);
+        if (actionId) (parsed as NextResponse).headers.set("x-action-id", actionId);
+        log.warn("register.backend.forwarded_response", { status: (parsed as NextResponse).status, durationMs: Date.now() - startedAt });
+        return parsed;
+    }
+
+    log.info("register.success", { user_id: parsed?.data?.user_id });
+
+    const ok = createSuccessResponse(
+        parsed?.message || "Registration Successful",
+        parsed?.data ?? parsed,
+        "OK",
+        201,
+        requestId
+    );
+    ok.headers.set("x-request-id", requestId);
+    if (actionId) ok.headers.set("x-action-id", actionId);
+
+    log.info("register.completed", { durationMs: Date.now() - startedAt });
+    return ok;
+}
+export const POST = withApiHandler(registerHandler);
+
+

@@ -1,0 +1,45 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 14
+    },
+    "auditLog": "nextjs_logs/.e371cecaf792fd4b808b8697ff34864436943ea7-audit.json",
+    "files": [
+        {
+            "date": 1753809935224,
+            "name": "nextjs_logs/2025-07-29-combined.log",
+            "hash": "2298116c2ddeb2f7ff4977ad03a93e718667b44081c8c3c1987277834a300032"
+        },
+        {
+            "date": 1754226999080,
+            "name": "nextjs_logs/2025-08-03-combined.log",
+            "hash": "3efd870b5d8313338bfd307e75f697b55dcb0db206c312c284f014309ce32598"
+        },
+        {
+            "date": 1754398131668,
+            "name": "nextjs_logs/2025-08-05-combined.log",
+            "hash": "66c013ef3dcd03c13ad994e52fedadc20c34ae6661543c3ff3f696f12179d324"
+        },
+        {
+            "date": 1754477503287,
+            "name": "nextjs_logs/2025-08-06-combined.log",
+            "hash": "a0eea4cf23eb5413fdf1c50859e80f61b66c9078757eb123bf913cdbc22d7262"
+        },
+        {
+            "date": 1754584498272,
+            "name": "nextjs_logs/2025-08-07-combined.log",
+            "hash": "26df554cbcfd0099472eced33a76cef2196c1e57810cded44dd11aefa829a3e6"
+        },
+        {
+            "date": 1754664767768,
+            "name": "nextjs_logs/2025-08-08-combined.log",
+            "hash": "bdb5bdd6727663aea4444d5b3103a35049a5d29d4a884633fb4234e4d0488482"
+        },
+        {
+            "date": 1754729935525,
+            "name": "nextjs_logs/2025-08-09-combined.log",
+            "hash": "dd95789fd31817b9fd49b00754578b14d878bd74b0b64c1fe9876b3774d42ed9"
+        }
+    ],
+    "hashType": "sha256"
+}

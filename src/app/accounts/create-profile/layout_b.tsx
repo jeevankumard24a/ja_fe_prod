@@ -1,5 +1,8 @@
 "use client";
 
+import { headers } from "next/headers";
+import { RequestIdProvider } from "@/utils/request-id-context";
+
 import React, { Fragment, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -28,25 +31,29 @@ import {IoSchoolSharp} from "react-icons/io5";
 import {SiBmcsoftware} from "react-icons/si";
 import {GrContact} from "react-icons/gr";
 
-export default function Home_Layout({ children }: { children: React.ReactNode }) {
+export default async function Home_Layout({ children }: { children: React.ReactNode }) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const pathname = usePathname();
 
+    const h = await headers();
+    // middleware guarantees this header; still guard just in case
+    const requestId =   h.get("x-request-id");
+
     const baseImageUrl =
-        process.env.NEXT_PUBLIC_IMAGE_BASE_URL ||
+        process.env.NEXT_PUBLIC_IMAGE_URL ||
         "https://s3.ap-south-1.amazonaws.com/com.pa.images.1";
     const baseDomainUrl =
         process.env.NEXT_PUBLIC_DOMAIN_BASE_URL || "https://jalgo.shop";
 
     const menuItems = [
         { label: "Create Profile/Login", icon: <FaUserPlus className="text-xl" />, href: "/profile/create" },
-        { label: "Schools",      icon: <FaUniversity className="text-xl" />, href: "/colleges" },
+        { label: "Schools",      icon: <FaUniversity className="text-xl" />, href: "/schools" },
         { label: "Colleges",      icon: <FaUniversity className="text-xl" />, href: "/colleges" },
-        { label: "Companies",      icon: <FaUniversity className="text-xl" />, href: "/colleges" },
+        { label: "Companies",      icon: <SiBmcsoftware className="text-xl" />, href: "/companies" },
         { label: "Job Exams",     icon: <BiSolidSelectMultiple className="text-xl" />, href: "/job-exams" },
-        { label: "Coaching Centers",     icon: <BiSolidSelectMultiple className="text-xl" />, href: "/job-exams" },
-        { label: "Training Centers",     icon: <BiSolidSelectMultiple className="text-xl" />, href: "/job-exams" },
-        { label: "About Us",     icon: <BiSolidSelectMultiple className="text-xl" />, href: "/job-exams" },
+        { label: "Coaching Centers",     icon: <PiExamFill className="text-xl" />, href: "/coaching-centers" },
+        { label: "Training Centers",     icon: <FaCode className="text-xl" />, href: "/training-centers" },
+        { label: "About Us",     icon: <FaInfoCircle className="text-xl" />, href: "/about-us" },
     ];
 
     const navItems = [
@@ -60,11 +67,10 @@ export default function Home_Layout({ children }: { children: React.ReactNode })
         { label: "About Us", href: "/about-us", icon: <FaInfoCircle className="text-xl" /> },
     ];
 
-
     const sidebarItems = [
         { label: "Schools",   href: `${baseDomainUrl}/schools-home`,        image: "/school_6.png",      desktopImage: `${baseImageUrl}/school_logo.png` },
         { label: "Companies", href: `${baseDomainUrl}/colleges-home`,       image: "/schools_7.png",     desktopImage: "/company2.png" },
-        { label: "Menu",      href: `${baseDomainUrl}/all-links`,           image: "/more3.png",         desktopImage: `${baseImageUrl}/all_links.png` },
+        { label: "Menu",      href: `${baseDomainUrl}/about-us`,           image: "/more3.png",         desktopImage: `${baseImageUrl}/all_links.png` },
     ];
 
     return (
@@ -72,7 +78,7 @@ export default function Home_Layout({ children }: { children: React.ReactNode })
             {/* Mobile Sidebar */}
             <Dialog
                 open={sidebarOpen}
-                onClose={setSidebarOpen}
+                onClose={() => setSidebarOpen}
                 className="relative z-50 lg:hidden"
             >
                 <DialogBackdrop
@@ -83,23 +89,23 @@ export default function Home_Layout({ children }: { children: React.ReactNode })
                 <div className="fixed inset-0 flex">
                     <DialogPanel
                         transition
-                        className="relative mr-16 flex w-full max-w-xs flex-1 transform transition duration-300 ease-in-out data-[closed]:-translate-x-full"
+                        className="relative mr-16 flex w-full max-w-xs flex-auto transform transition-all duration-300 ease-in-out data-[closed]:-translate-x-full"
                     >
                         <TransitionChild>
-                            <div className="absolute left-full top-0 flex w-16 justify-center pt-5 duration-300 ease-in-out data-[closed]:opacity-0">
+                            <div className="absolute left-full top-0 flex w-16 justify-center pt-5 duration-300 ease-in-out data-[0]:opacity-0">
                                 <button
                                     type="button"
                                     onClick={() => setSidebarOpen(false)}
-                                    className="-m-2.5 p-2.5 text-white hover:text-gray-300 transition-colors"
+                                    className="relative -m-2.5 p-2.5 text-white hover:text-gray-300 transition-colors"
                                 >
-                                    <span className="sr-only">Close sidebar</span>
+                                    <span className="absolute sr-only">Close sidebar</span>
                                     <XMarkIcon aria-hidden="true" className="size-6" />
                                 </button>
                             </div>
                         </TransitionChild>
 
                         {/* Mobile Sidebar Content */}
-                        <div className="flex grow flex-col gap-y-5 overflow-y-auto rounded-l-[40px] bg-gradient-to-r1 px-6 pb-4">
+                        <div className="flex items-center grow flex-col gap-y-5 overflow-y-auto rounded-l-[40px] bg-gradient-to-r1 px-6 pb-4">
                             {/* Logo Section */}
                             <div className="flex flex-col mt-4 gap-4 h-16 shrink-0 items-center">
                                 <Link href="https://jalgo.tech/" className="block">
@@ -141,7 +147,6 @@ export default function Home_Layout({ children }: { children: React.ReactNode })
                                 {/*    </Link>*/}
                                 {/*))}*/}
 
-
                                 <div className="flex-auto rounded-3xl text-sm/6  ">
                                     <div
                                         className="
@@ -177,9 +182,6 @@ export default function Home_Layout({ children }: { children: React.ReactNode })
                                         ))}
                                     </div>
                                 </div>
-
-
-
                             </nav>
                         </div>
                     </DialogPanel>
@@ -235,7 +237,7 @@ export default function Home_Layout({ children }: { children: React.ReactNode })
                         <button
                             type="button"
                             onClick={() => setSidebarOpen(true)}
-                            className="p-2.5 text-gray-700 lg:hidden hover:bg-gray-100 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#005b9a] focus:ring-offset-2"
+                            className="p-2.5 text-gray-700 lg:hidden hover:bg-gray-100 rounded-full border-2 border-[#005b9a] transition-colors duration-200 focus:outline-none "
                         >
                             <span className="sr-only">Open sidebar</span>
                             <Bars3Icon aria-hidden="true" className="size-6" />
@@ -243,107 +245,102 @@ export default function Home_Layout({ children }: { children: React.ReactNode })
                     </div>
                     {/* Centered Content: Logo and Menu Items */}
                     <div className="flex-grow flex justify-center">
-                        <div className="flex flex-col items-center justify-center gap-2 sm:flex-row sm:gap-6 md:gap-8">
+                        <div className="flex flex-row items-center justify-center gap-6 md:gap-8">
                             {/* Logo */}
                             <Image
                                 src="/jalgo_logo_40.png"
                                 alt="JALGO Logo"
-                                width={203}
-                                height={40}
-                                className="block xl:hidden rounded-lg hover:opacity-80 transition-opacity duration-200"
+                                width={100}
+                                height={20}
+                                className="block sm:hidden rounded-lg hover:opacity-80 transition-opacity duration-200"
                             />
                             <Image
                                 src="/jalgo_logo_40.png"
                                 alt="JALGO Logo"
                                 width={203}
                                 height={40}
-                                className="hidden xl:block rounded-lg hover:opacity-80 transition-opacity duration-200"
+                                className="hidden sm:block rounded-lg hover:opacity-80 transition-opacity duration-200"
                             />
                             {/* Menu Items */}
-                            {/* Menu Items */}
-                            <div className="flex flex-nowrap items-center gap-4 overflow-x-auto sm:flex-wrap sm:overflow-visible sm:gap-6 md:gap-8 font-ibmm font-medium min-w-0">
-
-                                {/* Always visible: Create Profile/Login */}
+                            <div className="hidden sm:flex flex-nowrap items-center gap-4 sm:gap-6 md:gap-8 font-ibmm font-medium min-w-0">
+                                {/* Create Profile/Login */}
                                 <Link
                                     href="/profile/create"
                                     className={`
-      flex flex-col items-center gap-1 sm:gap-2
-      px-2 sm:px-4 py-1 sm:py-2
-      rounded-lg sm:rounded-xl
-      transition-all duration-200 cursor-pointer
-      focus:outline-none focus:ring-2 focus:ring-[#005b9a] focus:ring-offset-2
-      hover:bg-gray-100 hover:shadow-md hover:scale-105
-      ${pathname === "/profile/create"
+                                        flex flex-col items-center gap-1 sm:gap-2
+                                        px-2 sm:px-4 py-1 sm:py-2
+                                        rounded-lg sm:rounded-xl
+                                        transition-all duration-200 cursor-pointer
+                                        focus:outline-none focus:ring-2 focus:ring-[#005b9a] focus:ring-offset-2
+                                        hover:bg-gray-100 hover:shadow-md hover:scale-105
+                                        ${pathname === "/profile/create"
                                         ? "bg-[#e0f7fa] shadow-lg scale-105 border-b-4 border-[#00aab0] text-[#007a88]"
                                         : "text-gray-700 hover:text-[#005b9a]"}
-    `}
+                                    `}
                                     aria-current={pathname === "/profile/create" ? "page" : undefined}
                                     title="Create Profile or Login"
                                 >
                                     <FaUserPlus className={`text-xl sm:text-2xl ${pathname === "/profile/create" ? "text-[#007a88]" : "text-[#005b9a]"}`} />
                                     <span className="text-xs sm:text-sm font-medium">Create Profile/Login</span>
                                 </Link>
-
                                 {/* Only visible ≥1024px (lg) */}
                                 <div className="hidden lg:flex flex-nowrap items-center gap-4">
                                     {/* Colleges */}
                                     <Link
                                         href="/colleges"
                                         className={`
-        flex flex-col items-center gap-1 sm:gap-2
-        px-2 sm:px-4 py-1 sm:py-2
-        rounded-lg sm:rounded-xl
-        transition-all duration-200 cursor-pointer
-        focus:outline-none focus:ring-2 focus:ring-[#005b9a] focus:ring-offset-2
-        hover:bg-gray-100 hover:shadow-md hover:scale-105
-        ${pathname === "/colleges"
+                                            flex flex-col items-center gap-1 sm:gap-2
+                                            px-2 sm:px-4 py-1 sm:py-2
+                                            rounded-lg sm:rounded-xl
+                                            transition-all duration-200 cursor-pointer
+                                            focus:outline-none focus:ring-2 focus:ring-[#005b9a] focus:ring-offset-2
+                                            hover:bg-gray-100 hover:shadow-md hover:scale-105
+                                            ${pathname === "/colleges"
                                             ? "bg-[#e0f7fa] shadow-lg scale-105 border-b-4 border-[#00aab0] text-[#007a88]"
                                             : "text-gray-700 hover:text-[#005b9a]"}
-      `}
+                                        `}
                                         aria-current={pathname === "/colleges" ? "page" : undefined}
                                         title="Colleges"
                                     >
                                         <FaUniversity className={`text-xl sm:text-2xl ${pathname === "/colleges" ? "text-[#007a88]" : "text-[#005b9a]"}`} />
                                         <span className="text-xs sm:text-sm font-medium">Colleges</span>
                                     </Link>
-
                                     {/* Job Exams */}
                                     <Link
                                         href="/job-exams"
                                         className={`
-        flex flex-col items-center gap-1 sm:gap-2
-        px-2 sm:px-4 py-1 sm:py-2
-        rounded-lg sm:rounded-xl
-        transition-all duration-200 cursor-pointer
-        focus:outline-none focus:ring-2 focus:ring-[#005b9a] focus:ring-offset-2
-        hover:bg-gray-100 hover:shadow-md hover:scale-105
-        ${pathname === "/job-exams"
+                                            flex flex-col items-center gap-1 sm:gap-2
+                                            px-2 sm:px-4 py-1 sm:py-2
+                                            rounded-lg sm:rounded-xl
+                                            transition-all duration-200 cursor-pointer
+                                            focus:outline-none focus:ring-2 focus:ring-[#005b9a] focus:ring-offset-2
+                                            hover:bg-gray-100 hover:shadow-md hover:scale-105
+                                            ${pathname === "/job-exams"
                                             ? "bg-[#e0f7fa] shadow-lg scale-105 border-b-4 border-[#00aab0] text-[#007a88]"
                                             : "text-gray-700 hover:text-[#005b9a]"}
-      `}
+                                        `}
                                         aria-current={pathname === "/job-exams" ? "page" : undefined}
                                         title="Job Exams"
                                     >
                                         <BiSolidSelectMultiple className={`text-xl sm:text-2xl ${pathname === "/job-exams" ? "text-[#007a88]" : "text-[#005b9a]"}`} />
                                         <span className="text-xs sm:text-sm font-medium">Job Exams</span>
                                     </Link>
-
                                     {/* Solutions Dropdown */}
                                     <div
                                         role="button"
                                         tabIndex={0}
                                         title="Solutions"
                                         className={`
-        flex flex-col items-center 
-        px-2 sm:px-4 py-1 sm:py-2 gap-2
-        rounded-lg sm:rounded-xl
-        transition-all duration-200 
-        focus:outline-none focus:ring-2 focus:ring-[#005b9a] focus:ring-offset-2
-        hover:bg-gray-100 hover:shadow-md hover:scale-105
-        ${pathname.startsWith('/solutions')
+                                            flex flex-col items-center 
+                                            px-2 sm:px-4 py-1 sm:py-2 gap-2
+                                            rounded-lg sm:rounded-xl
+                                            transition-all duration-200 
+                                            focus:outline-none focus:ring-2 focus:ring-[#005b9a] focus:ring-offset-2
+                                            hover:bg-gray-100 hover:shadow-md hover:scale-105
+                                            ${pathname.startsWith('/solutions')
                                             ? 'bg-[#e0f7fa] shadow-lg scale-105 border-b-4 border-[#00aab0] text-[#007a88]'
                                             : 'text-gray-700 hover:text-[#005b9a]'}
-      `}
+                                        `}
                                         aria-current={pathname.startsWith('/solutions') ? 'page' : undefined}
                                     >
                                         <MdOutlineMenu className={`text-xl sm:text-2xl ${pathname.startsWith("/solutions") ? "text-[#007a88]" : "text-[#005b9a]"}`} />
@@ -351,7 +348,6 @@ export default function Home_Layout({ children }: { children: React.ReactNode })
                                     </div>
                                 </div>
                             </div>
-
                         </div>
                     </div>
                     {/* Optional Right-Aligned Content */}
@@ -362,7 +358,13 @@ export default function Home_Layout({ children }: { children: React.ReactNode })
 
                 {/* Page Content */}
                 <main className="h-full w-full">
-                    <Providers>{children}</Providers>
+
+
+                    <RequestIdProvider requestId={requestId}>
+                        <Providers>{children}</Providers>
+                    </RequestIdProvider>
+
+
                 </main>
             </div>
         </div>

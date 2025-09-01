@@ -1,6 +1,13 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+    allowedDevOrigins: [
+        "jalgo.ai",
+        "www.jalgo.ai",
+        "*.jalgo.ai",
+        "localhost:3001",
+        "3.111.162.20:3001",
+    ],
     images: {
         remotePatterns: [
             {
@@ -15,7 +22,7 @@ const nextConfig: NextConfig = {
             bodySizeLimit: "5mb",
         },
     },
-    allowedDevOrigins: ['https://jalgo.ai','localhost:3001','3.111.162.20:3001','local-origin.dev', '*.local-origin.dev'],
+
 };
 
 export default nextConfig;

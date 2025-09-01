@@ -5,7 +5,7 @@ import { make_api_request, type ApiEnvelope } from "@/utils/call_api/make_api_re
 import ApiError from "@/components/utils/ApiError";
 import log, { getActionId, setActionId } from "@/utils/call_api/logs";
 import { newId } from "@/utils/call_api/ids";
-import { getAccessToken } from "@/stores/auth/auth-store";
+//import { getAccessToken } from "@/stores/auth/auth-store";
 
 /** Match fields your page reads from `data` */
 export type DashboardPayload = {
@@ -26,9 +26,10 @@ export type LoadDashboardResponse = ApiEnvelope<DashboardPayload>;
  * - Adds x-action-id for correlation
  */
 export const load_dashboard = async (user_id: string): Promise<LoadDashboardResponse> => {
-  const accessToken = getAccessToken();
 
-  console.log("hiiiiiiiiiiiiMadhuuuuuuuuuu", accessToken);
+  //  The Logic is changed to get AccessToken from HttpOnly Cookie but not Zustand
+  //const accessToken = getAccessToken();
+  //console.log("hiiiiiiiiiiiiMadhuuuuuuuuuu", accessToken);
   console.log("hiiiiiiiiiiiiMadhuuuuuuuuuu222222222", user_id);
 
   // if (!accessToken) {
@@ -49,7 +50,7 @@ export const load_dashboard = async (user_id: string): Promise<LoadDashboardResp
     const res = await make_api_request<DashboardPayload>(url, {
       method: "GET",
       headers: {
-        authorization: `Bearer ${accessToken}`,
+  //      authorization: `Bearer ${accessToken}`,
         "x-action-id": actionId,
         accept: "application/json",
       },
